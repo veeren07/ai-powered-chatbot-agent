@@ -1,0 +1,24 @@
+# Set default behavior to automatically detect text files and normalize line endings
+* text=auto
+
+# Text files with explicit LF line endings in repo
+*.py text
+*.md text
+*.toml text
+*.lock text
+*.env text
+*.gitignore text
+
+# Windows script files require CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files - NEVER normalize line endings (prevents file corruption)
+*.pdf binary
+*.pptx binary
+*.pyc binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+
