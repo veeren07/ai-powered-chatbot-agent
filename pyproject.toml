@@ -26,6 +26,7 @@ dependencies = [
     "tiktoken>=0.13.0",
     "reportlab>=5.1.0",
     "python-pptx>=1.0.2",
+    "fastembed>=0.9.1",
 ]
 
 [tool.uv]

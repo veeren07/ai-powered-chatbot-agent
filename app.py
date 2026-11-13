@@ -167,18 +167,18 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### ⚙️ Model & Retrieval Settings")
 
-    # LLM Provider selection
+    # LLM Provider selection (default to DeepSeek)
     provider = st.selectbox(
         "LLM Provider",
-        options=["OpenAI", "DeepSeek"],
+        options=["DeepSeek", "OpenAI"],
         index=0,
         help="Choose the model provider for grounded answer generation.",
     )
 
-    if provider == "OpenAI":
-        model_name = st.selectbox("OpenAI Model", ["gpt-4o-mini", "gpt-4o"], index=0)
-    else:
+    if provider == "DeepSeek":
         model_name = st.selectbox("DeepSeek Model", ["deepseek-chat"], index=0)
+    else:
+        model_name = st.selectbox("OpenAI Model", ["gpt-4o-mini", "gpt-4o"], index=0)
 
     temperature = st.slider(
         "Temperature",
@@ -221,10 +221,13 @@ with st.sidebar:
     # API Key check notifications
     openai_key_set = bool(os.getenv("OPENAI_API_KEY"))
     deepseek_key_set = bool(os.getenv("DEEPSEEK_API_KEY"))
-    if not openai_key_set:
-        st.warning("⚠️ OPENAI_API_KEY is not set in .env. Required for embeddings & OpenAI.")
-    if provider == "DeepSeek" and not deepseek_key_set:
-        st.warning("⚠️ DEEPSEEK_API_KEY is not set in .env.")
+    if provider == "DeepSeek":
+        if deepseek_key_set:
+            st.success("🤖 DeepSeek is active for all answers.")
+        else:
+            st.warning("⚠️ DEEPSEEK_API_KEY is not set in .env.")
+    elif provider == "OpenAI" and not openai_key_set:
+        st.warning("⚠️ OPENAI_API_KEY is not set in .env.")
 
 
 # ==============================================================================

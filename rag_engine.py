@@ -154,20 +154,34 @@ def chunk_documents(
 # ==============================================================================
 # Step 4: Generate Embeddings
 # ==============================================================================
-def get_embeddings(model_name: str = "text-embedding-3-small", api_key: Optional[str] = None) -> OpenAIEmbeddings:
+def get_embeddings(model_name: Optional[str] = None, api_key: Optional[str] = None):
     """
-    Returns an OpenAI embeddings model instance.
+    Returns an embeddings model instance.
+    Defaults to FastEmbed (BAAI/bge-small-en-v1.5) for free, fast, local CPU vectorization (no API credits required).
+    Falls back to OpenAIEmbeddings if explicitly requested and an active OpenAI key is available.
     """
-    key = api_key or os.getenv("OPENAI_API_KEY", "")
-    if not key:
-        raise ValueError("OPENAI_API_KEY is required to generate vector embeddings.")
-    return OpenAIEmbeddings(model=model_name, openai_api_key=key)
+    # If explicitly requested an OpenAI embedding model and a key is provided
+    if model_name and "text-embedding" in model_name:
+        key = api_key or os.getenv("OPENAI_API_KEY", "")
+        if key:
+            return OpenAIEmbeddings(model=model_name, openai_api_key=key)
+
+    try:
+        from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
+        return FastEmbedEmbeddings(model_name=model_name or "BAAI/bge-small-en-v1.5")
+    except Exception:
+        key = api_key or os.getenv("OPENAI_API_KEY", "")
+        if not key:
+            raise ValueError(
+                "No embedding model available. Please ensure fastembed is installed or OPENAI_API_KEY is configured."
+            )
+        return OpenAIEmbeddings(model=model_name or "text-embedding-3-small", openai_api_key=key)
 
 
 # ==============================================================================
 # Step 5: Vector Database (FAISS)
 # ==============================================================================
-def create_vector_store(chunks: List[Document], embeddings: Optional[OpenAIEmbeddings] = None) -> FAISS:
+def create_vector_store(chunks: List[Document], embeddings: Optional[Any] = None) -> FAISS:
     """
     Generates embeddings for all chunks and indexes them in an in-memory FAISS vector store.
     """
@@ -283,13 +297,14 @@ def build_grounded_prompt(
 # Step 9: LLM Initialization & Answer Generation
 # ==============================================================================
 def get_chat_model(
-    provider: str = "OpenAI",
+    provider: str = "DeepSeek",
     model_name: Optional[str] = None,
     temperature: float = 0.2,
     streaming: bool = True,
 ):
     """
-    Instantiates an LLM client for either OpenAI or DeepSeek.
+    Instantiates an LLM client for either DeepSeek or OpenAI.
+    Defaults to DeepSeek.
     """
     provider_clean = provider.strip().lower()
 
@@ -304,7 +319,7 @@ def get_chat_model(
             api_key=api_key,
         )
     else:
-        # Default to OpenAI
+        # OpenAI option
         api_key = os.getenv("OPENAI_API_KEY", "")
         if not api_key:
             raise ValueError("OPENAI_API_KEY not found in environment.")

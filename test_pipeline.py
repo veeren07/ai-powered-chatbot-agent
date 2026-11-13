@@ -46,11 +46,11 @@ def test_rag_end_to_end():
     print(f"    - Sample Chunk 1 preview: {chunks[0].page_content[:120]}...")
 
     # Step 4: Generate Embeddings
-    print("\n[Step 4] Initializing Vector Embeddings (text-embedding-3-small)...")
+    print("\n[Step 4] Initializing Vector Embeddings...")
     embeddings = rag_engine.get_embeddings()
     test_vec = embeddings.embed_query("testing embedding")
     print(f" -> Embeddings OK (Dimension: {len(test_vec)})")
-    assert len(test_vec) == 1536, f"Expected 1536 dimensions, got {len(test_vec)}"
+    assert len(test_vec) in (384, 1536), f"Expected 384 or 1536 dimensions, got {len(test_vec)}"
 
     # Step 5: Store in Vector Database (FAISS)
     print("\n[Step 5] Indexing Chunks in FAISS Vector Store...")
@@ -77,12 +77,12 @@ def test_rag_end_to_end():
     assert "RETRIEVED DOCUMENT CONTEXT" in user_msg
     print(" -> Grounded prompt constructed successfully.")
 
-    # Step 9: Generate Answer with LLM
-    print("\n[Step 9] Generating Answer with LLM (Testing OpenAI)...")
-    llm = rag_engine.get_chat_model(provider="OpenAI", model_name="gpt-4o-mini", temperature=0.0, streaming=False)
-    result = rag_engine.generate_answer_sync(query, vector_store, llm, k=3)
+    # Step 9: Generate Answer with LLM (DeepSeek)
+    print("\n[Step 9] Generating Answer with DeepSeek Chat LLM...")
+    ds_llm = rag_engine.get_chat_model(provider="DeepSeek", model_name="deepseek-chat", temperature=0.0, streaming=False)
+    result = rag_engine.generate_answer_sync(query, vector_store, ds_llm, k=3)
     answer = result["answer"]
-    print(f"\n--- LLM GROUNDED ANSWER ---\n{answer}\n---------------------------")
+    print(f"\n--- DEEPSEEK GROUNDED ANSWER ---\n{answer}\n---------------------------------")
 
     # Verification assertions
     assert "1,000" in answer or "1000" in answer, "Expected answer to contain 1,000 characters chunk size"
@@ -102,7 +102,7 @@ def test_rag_end_to_end():
     # Step 10: Preserve state & check out-of-domain query
     print("\n[Step 10] Testing Grounding Boundaries (Querying Information NOT in PDF)...")
     unrelated_query = "What is the recipe for baking chocolate chip cookies?"
-    unrelated_res = rag_engine.generate_answer_sync(unrelated_query, vector_store, llm, k=2)
+    unrelated_res = rag_engine.generate_answer_sync(unrelated_query, vector_store, ds_llm, k=2)
     print(f" -> Query: '{unrelated_query}'")
     print(f" -> Grounded Refusal / Answer: {unrelated_res['answer']}")
 
