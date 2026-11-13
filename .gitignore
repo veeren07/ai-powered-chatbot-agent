@@ -1,1 +1,22 @@
-*.env
+# Environment & secrets
+.env
+.env*.local
+!.env.example
+.streamlit/secrets.toml
+secrets.toml
+
+# Python cache & build
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+build/
+dist/
+*.egg-info/
+
+# OS files
+.DS_Store
+Thumbs.db

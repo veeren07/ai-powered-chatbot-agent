@@ -14,6 +14,15 @@ from sample_data import generate_sample_pdf
 
 load_dotenv()
 
+# Sync Streamlit Cloud secrets to os.environ if running on Streamlit Community Cloud
+try:
+    if hasattr(st, "secrets"):
+        for secret_key in ["OPENAI_API_KEY", "DEEPSEEK_API_KEY"]:
+            if secret_key in st.secrets and not os.getenv(secret_key):
+                os.environ[secret_key] = str(st.secrets[secret_key])
+except Exception:
+    pass
+
 # ==============================================================================
 # Page Configuration & Styling
 # ==============================================================================

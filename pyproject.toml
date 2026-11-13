@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mission6-graphs"
+name = "Capstone-graphs"
 version = "0.1.0"
-description = "AI Agentathon Mission 6 - Graph Workflow Agents with LangGraph"
+description = "AI Agentathon- Graph Workflow Agents with LangChain"
 requires-python = ">=3.11"
 dependencies = [
     "langgraph>=1.0.10",
