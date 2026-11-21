@@ -15,8 +15,22 @@ Implements the complete 10-step PDF chatbot workflow:
 """
 
 import os
+import sys
 import tempfile
 from typing import List, Dict, Any, Generator, Optional, Tuple
+
+# Force IPv4 socket resolution on Windows to prevent WinError 10054 / 10038 socket drops
+import socket
+try:
+    _orig_getaddrinfo = socket.getaddrinfo
+    def _ipv4_first_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+        if family == 0:
+            family = socket.AF_INET
+        return _orig_getaddrinfo(host, port, family, type, proto, flags)
+    socket.getaddrinfo = _ipv4_first_getaddrinfo
+except Exception:
+    pass
+
 from dotenv import load_dotenv
 
 from langchain_core.documents import Document
@@ -168,7 +182,17 @@ def get_embeddings(model_name: Optional[str] = None, api_key: Optional[str] = No
 
     try:
         from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
-        return FastEmbedEmbeddings(model_name=model_name or "BAAI/bge-small-en-v1.5")
+        # Prefer permanent ~/.cache/fastembed_cache or system temp cache
+        cache_dir = os.path.expanduser("~/.cache/fastembed_cache")
+        if not os.path.exists(cache_dir):
+            temp_cache = os.path.join(tempfile.gettempdir(), "fastembed_cache")
+            if os.path.exists(temp_cache):
+                cache_dir = temp_cache
+
+        return FastEmbedEmbeddings(
+            model_name=model_name or "BAAI/bge-small-en-v1.5",
+            cache_dir=cache_dir if os.path.exists(cache_dir) else None,
+        )
     except Exception:
         key = api_key or os.getenv("OPENAI_API_KEY", "")
         if not key:

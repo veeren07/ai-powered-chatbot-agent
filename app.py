@@ -6,6 +6,20 @@ PDF -> Extract Text -> Chunk -> Embed -> Vector Store -> Retrieve Relevant Chunk
 """
 
 import os
+import sys
+
+# Force IPv4 socket resolution on Windows to prevent WinError 10054 / 10038
+import socket
+try:
+    _orig_getaddrinfo = socket.getaddrinfo
+    def _ipv4_first_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+        if family == 0:
+            family = socket.AF_INET
+        return _orig_getaddrinfo(host, port, family, type, proto, flags)
+    socket.getaddrinfo = _ipv4_first_getaddrinfo
+except Exception:
+    pass
+
 import streamlit as st
 from dotenv import load_dotenv
 
