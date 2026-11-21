@@ -113,6 +113,12 @@ if "doc_stats" not in st.session_state:
 if "last_processed_file" not in st.session_state:
     st.session_state.last_processed_file = None
 
+if "uploader_key" not in st.session_state:
+    st.session_state.uploader_key = 0
+
+if "active_source_type" not in st.session_state:
+    st.session_state.active_source_type = None
+
 
 # ==============================================================================
 # Helper Functions for Indexing
@@ -151,6 +157,7 @@ with st.sidebar:
         "Upload a PDF Document",
         type=["pdf"],
         help="Upload any text-based PDF to chat with.",
+        key=f"pdf_uploader_{st.session_state.uploader_key}",
     )
 
     col_btn1, col_btn2, col_btn3 = st.columns(3)
@@ -175,7 +182,8 @@ with st.sidebar:
             "status": "No document loaded",
         }
         st.session_state.last_processed_file = None
-        st.session_state.raw_doc_source = None
+        st.session_state.active_source_type = None
+        st.session_state.uploader_key += 1
         st.rerun()
 
     st.markdown("---")
@@ -248,34 +256,46 @@ with st.sidebar:
 # Document Ingestion Trigger
 # ==============================================================================
 if load_sample:
-    sample_path = generate_sample_pdf()
+    # Clear uploaded file from widget and reset state for sample document
+    st.session_state.uploader_key += 1
+    st.session_state.messages = []
+    st.session_state.active_source_type = "sample"
     try:
+        sample_path = generate_sample_pdf()
         process_and_index_pdf(
             sample_path,
             filename="quantum_and_ai_handbook.pdf",
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
         )
-        st.sidebar.success("Sample PDF loaded and indexed in FAISS!")
+        st.session_state.last_processed_file = "quantum_and_ai_handbook.pdf"
+        st.rerun()
     except Exception as e:
         st.sidebar.error(f"Error loading sample PDF: {e}")
 
 elif uploaded_file is not None:
-    if st.session_state.last_processed_file != uploaded_file.name or reindex_btn:
+    if (
+        st.session_state.active_source_type != "upload"
+        or st.session_state.last_processed_file != uploaded_file.name
+        or reindex_btn
+    ):
         try:
+            st.session_state.active_source_type = "upload"
+            st.session_state.messages = []
             process_and_index_pdf(
                 uploaded_file,
                 filename=uploaded_file.name,
                 chunk_size=chunk_size,
                 chunk_overlap=chunk_overlap,
             )
-            st.sidebar.success(f"'{uploaded_file.name}' indexed successfully!")
+            st.session_state.last_processed_file = uploaded_file.name
+            st.rerun()
         except Exception as e:
             st.sidebar.error(f"Error processing PDF: {e}")
 
 elif reindex_btn and st.session_state.doc_stats["filename"] == "quantum_and_ai_handbook.pdf":
-    sample_path = generate_sample_pdf()
     try:
+        sample_path = generate_sample_pdf()
         process_and_index_pdf(
             sample_path,
             filename="quantum_and_ai_handbook.pdf",
@@ -283,6 +303,7 @@ elif reindex_btn and st.session_state.doc_stats["filename"] == "quantum_and_ai_h
             chunk_overlap=chunk_overlap,
         )
         st.sidebar.success("Sample PDF re-indexed with new chunk settings!")
+        st.rerun()
     except Exception as e:
         st.sidebar.error(f"Error re-indexing: {e}")
 

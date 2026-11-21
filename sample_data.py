@@ -10,6 +10,8 @@ from reportlab.lib import colors
 
 
 def generate_sample_pdf(output_path="sample_documents/quantum_and_ai_handbook.pdf"):
+    if os.path.exists(output_path) and os.path.getsize(output_path) > 1000:
+        return output_path
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     doc = SimpleDocTemplate(
         output_path,
