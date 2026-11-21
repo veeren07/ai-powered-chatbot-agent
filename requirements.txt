@@ -15,6 +15,7 @@ tiktoken>=0.8.0
 
 # PDF & Presentation Processing
 pypdf>=5.0.0
+fonttools>=4.50.0
 reportlab>=4.0.0
 python-pptx>=1.0.0
 

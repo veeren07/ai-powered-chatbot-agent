@@ -27,6 +27,7 @@ dependencies = [
     "reportlab>=5.1.0",
     "python-pptx>=1.0.2",
     "fastembed>=0.9.1",
+    "fonttools>=4.68.0",
 ]
 
 [tool.uv]
